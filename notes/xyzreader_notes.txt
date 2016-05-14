@@ -1,0 +1,25 @@
+xyzreader notes
+
+- Make main activity a coordinated layout.
+
+- Do we need a FAB button?  Yes, to share in detail view
+
+- Define dark and light themes with Settings.
+
+- Image to fill header, collapsing toolbar.
+
+- Animation of activity transition using the image as the element.
+
+x Cards should make better use of photos.  Go to full width, gradient screen
+  behind text.
+  
+x Cards columns: 1 on phone portrait, 2 on phone landscape and tablet portrait,
+  3 on tablet portrait.
+
+- Snackbar for any purpose?
+
+x Make a vectorized logo.  .
+
+- Animate logo in Toolbar in ArticleListActivity - shrink with tool bar, 
+  transition to a logo in the title area of collapsed toolbar. 
+

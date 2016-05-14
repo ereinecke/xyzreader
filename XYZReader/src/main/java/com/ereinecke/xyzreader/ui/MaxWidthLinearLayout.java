@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.xyzreader.ui;
+package com.ereinecke.xyzreader.ui;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -51,7 +51,7 @@ public class MaxWidthLinearLayout extends LinearLayout {
         init(context, attrs, defStyleAttr, defStyleRes);
     }
 
-    public void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    private void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         TypedArray a = context.obtainStyledAttributes(attrs, ATTRS);
         mMaxWidth = a.getLayoutDimension(0, Integer.MAX_VALUE);
         a.recycle();

@@ -45,7 +45,6 @@ MEETS SPECIFICATIONS
 - App properly specifies elevations for app bars, FABs, and other elements specified in the Material Design specification.
 - App has a consistent color theme defined in styles.xml.
 - Color theme does not impact usability of the app.
-- App has a consistent color theme defined in styles.xml. Color theme does not impact usability of the app.
 - App provides sufficient space between text and surrounding elements.
 - App uses images that are high quality, specific, and full bleed.
 - App uses fonts that are either the Android defaults, are complementary, and aren't otherwise distracting.
