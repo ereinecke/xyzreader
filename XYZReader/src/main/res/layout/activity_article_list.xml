@@ -45,8 +45,9 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fitsSystemWindows="true"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed">
+            app:layout_scrollFlags="scroll|exitUntilCollapsed" >
 
+            <!--
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -55,13 +56,14 @@
                 android:paddingLeft="16dp"
                 android:paddingTop="@dimen/logo_padding_top"
                 android:src="@drawable/logo_vector" />
+                -->
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
-                app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                app:theme="@style/ThemeOverlay.AppCompat.Light"
                 android:layout_marginLeft="@dimen/list_toolbar_side_margin"
                 android:layout_marginRight="@dimen/list_toolbar_side_margin"
                 android:elevation="4dp"

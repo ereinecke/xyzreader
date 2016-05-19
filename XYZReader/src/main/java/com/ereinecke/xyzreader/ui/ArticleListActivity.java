@@ -1,5 +1,6 @@
 package com.ereinecke.xyzreader.ui;
 
+import android.annotation.TargetApi;
 import android.app.LoaderManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -7,7 +8,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.Loader;
 import android.database.Cursor;
+import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -41,6 +45,7 @@ public class ArticleListActivity extends AppCompatActivity implements
     private RecyclerView mRecyclerView;
     private final static String LOG_TAG = ArticleListActivity.class.getSimpleName();
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,15 +53,22 @@ public class ArticleListActivity extends AppCompatActivity implements
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        // getSupportActionBar().setLogo(R.drawable.logo_vector);
-        // getSupportActionBar().setDisplayUseLogoEnabled(true);
-        // getSupportActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.logo_vector));
-        // getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_USE_LOGO);
 
-
+        // Should I be using this  ??
         final View toolbarContainerView = findViewById(R.id.toolbar_container);
+
+        // Use custom typeface for title
+        Typeface titleTypeface = Typeface.createFromAsset(getAssets(), "fonts/TitanOne-Regular.ttf");
+
+        CollapsingToolbarLayout collapsingToolbar =
+                (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
+        collapsingToolbar.setTitle(getString(R.string.app_name));
+        // Looks like you have to set typeface after appearance
+        collapsingToolbar.setCollapsedTitleTextAppearance(R.style.ToolbarCollapsed);
+        collapsingToolbar.setCollapsedTitleTypeface(titleTypeface);
+        collapsingToolbar.setExpandedTitleTextAppearance(R.style.ToolbarExpanded);
+        collapsingToolbar.setExpandedTitleTypeface(titleTypeface);
+        collapsingToolbar.setExpandedTitleGravity(0x10);
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
 
@@ -66,6 +78,7 @@ public class ArticleListActivity extends AppCompatActivity implements
         if (savedInstanceState == null) {
             refresh();
         }
+
     }
 
     @Override
@@ -89,6 +102,7 @@ public class ArticleListActivity extends AppCompatActivity implements
 
         return super.onOptionsItemSelected(item);
     }
+
     private void refresh() {
         startService(new Intent(this, UpdaterService.class));
     }
@@ -164,8 +178,17 @@ public class ArticleListActivity extends AppCompatActivity implements
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    startActivity(new Intent(Intent.ACTION_VIEW,
-                            ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//                        Bundle bundle = ActivityOptions.makeSceneTransitionAnimation()
+//                                .toBundle();
+//                        startActivity(new Intent(Intent.ACTION_VIEW,
+//                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))),
+//                                bundle);
+//                    } else { // Don't need bundle if we can't do the transition
+                        startActivity(new Intent(Intent.ACTION_VIEW,
+                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+//                    }
+
                 }
             });
             return vh;
