@@ -29,8 +29,6 @@
         <item name="android:colorBackground">@color/theme_background</item>
         <item name="windowActionBar">false</item>
         <item name="android:windowContentTransitions">true</item>
-        <item name="android:windowExitTransition">@transition/list_exit
-        </item>
     </style>
 
 </resources>

@@ -22,11 +22,11 @@
                 <!--suppress AndroidLintContentDescription -->
 
                 <ImageView
-                    android:id="@+id/photo"
+                    android:id="@+id/photo_header"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:transitionName="profile"
-                     />
+                    android:transitionName="@string/transition_photo"
+                    android:longClickable="true" />
 
                 <View
                     android:layout_width="match_parent"
@@ -40,6 +40,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
+                android:id="@+id/article"
                 android:maxWidth="@dimen/detail_card_max_width"
                 android:background="#fff"
                 android:elevation="2dp"

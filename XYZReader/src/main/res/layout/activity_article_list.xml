@@ -47,17 +47,6 @@
             android:fitsSystemWindows="true"
             app:layout_scrollFlags="scroll|exitUntilCollapsed" >
 
-            <!--
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/app_name"
-                android:scaleType="fitStart"
-                android:paddingLeft="16dp"
-                android:paddingTop="@dimen/logo_padding_top"
-                android:src="@drawable/logo_vector" />
-                -->
-
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"

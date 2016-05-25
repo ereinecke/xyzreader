@@ -35,7 +35,7 @@ import com.ereinecke.xyzreader.data.ArticleLoader;
  */
 public class ArticleDetailFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor> {
-    private static final String TAG = "ArticleDetailFragment";
+    private static final String LOG_TAG = ArticleDetailFragment.class.getSimpleName();
 
     private static final String ARG_ITEM_ID = "item_id";
     private static final float PARALLAX_FACTOR = 1.25f;
@@ -54,6 +54,9 @@ public class ArticleDetailFragment extends Fragment implements
     private int mScrollY;
     private boolean mIsCard = false;
     private int mStatusBarFullOpacityBottom;
+
+    private View sharedElement;
+
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -81,6 +84,16 @@ public class ArticleDetailFragment extends Fragment implements
         mIsCard = getResources().getBoolean(R.bool.detail_is_card);
         mStatusBarFullOpacityBottom = getResources().getDimensionPixelSize(
                 R.dimen.detail_card_top_margin);
+
+        /* Entry transition we'll start with moving article in from below
+        Slide slide = new Slide(Gravity.BOTTOM);
+        slide.addTarget(R.id.article_body);
+        slide.setInterpolator(AnimationUtils.loadInterpolator(getActivity(),
+                android.R.interpolator.linear_out_slow_in));
+        slide.setDuration(3000);
+        getActivity().getWindow().setEnterTransition(slide); */
+
+
         setHasOptionsMenu(true);
     }
 
@@ -103,6 +116,7 @@ public class ArticleDetailFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         mRootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
+
         mDrawInsetsFrameLayout = (DrawInsetsFrameLayout)
                 mRootView.findViewById(R.id.draw_insets_frame_layout);
         mDrawInsetsFrameLayout.setOnInsetsCallback(new DrawInsetsFrameLayout.OnInsetsCallback() {
@@ -123,7 +137,7 @@ public class ArticleDetailFragment extends Fragment implements
             }
         });
 
-        mPhotoView = (ImageView) mRootView.findViewById(R.id.photo);
+        mPhotoView = (ImageView) mRootView.findViewById(R.id.photoView);
         mPhotoContainerView = mRootView.findViewById(R.id.photo_container);
 
         mStatusBarColorDrawable = new ColorDrawable(0);
@@ -138,10 +152,17 @@ public class ArticleDetailFragment extends Fragment implements
             }
         });
 
+        // Let calling activity know it can start the transition calculations
+//        while (container.isLaidOut()) {
+//            View sharedElement = View.findViewById(R.id.photo_header);
+//            getActivityCast().scheduleStartPostponedTransition(sharedElement);
+//        }
+
         bindViews();
         updateStatusBar();
         return mRootView;
     }
+
 
     private void updateStatusBar() {
         int color = 0;
@@ -181,7 +202,7 @@ public class ArticleDetailFragment extends Fragment implements
         TextView bylineView = (TextView) mRootView.findViewById(R.id.article_byline);
         bylineView.setMovementMethod(new LinkMovementMethod());
         TextView bodyView = (TextView) mRootView.findViewById(R.id.article_body);
-        bodyView.setTypeface(Typeface.createFromAsset(getResources().getAssets(), "Rosario-Regular.ttf"));
+        bodyView.setTypeface(Typeface.createFromAsset(getResources().getAssets(), "fonts/Rosario-Regular.ttf"));
 
         if (mCursor != null) {
             mRootView.setAlpha(0);
@@ -242,7 +263,7 @@ public class ArticleDetailFragment extends Fragment implements
 
         mCursor = cursor;
         if (mCursor != null && !mCursor.moveToFirst()) {
-            Log.e(TAG, "Error reading item detail cursor");
+            Log.e(LOG_TAG, "Error reading item detail cursor");
             mCursor.close();
             mCursor = null;
         }

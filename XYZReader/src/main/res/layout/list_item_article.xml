@@ -26,8 +26,8 @@
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/imageView"
-            android:transitionName="list_transition"
+            android:id="@+id/photoView"
+            android:transitionName="@string/transition_photo"
             android:background="@drawable/gradient_scrim" />
 
         <LinearLayout

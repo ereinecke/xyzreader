@@ -9,8 +9,8 @@
     <dimen name="fab_press_translation_z">6dp</dimen>
     <dimen name="fab_margin">24dp</dimen>
 
-    <dimen name="toolbar_expanded_text_size">120dp</dimen>
-    <dimen name="toolbar_collapsed_text_size">30dp</dimen>
+    <dimen name="toolbar_expanded_text_size">40dp</dimen>
+    <dimen name="toolbar_collapsed_text_size">24dp</dimen>
 
     <dimen name="app_bar_height">240dp</dimen>
     <dimen name="article_list_padding_top">120dp</dimen>

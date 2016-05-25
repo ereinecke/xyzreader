@@ -63,12 +63,13 @@ public class ArticleListActivity extends AppCompatActivity implements
         CollapsingToolbarLayout collapsingToolbar =
                 (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
         collapsingToolbar.setTitle(getString(R.string.app_name));
+
         // Looks like you have to set typeface after appearance
         collapsingToolbar.setCollapsedTitleTextAppearance(R.style.ToolbarCollapsed);
         collapsingToolbar.setCollapsedTitleTypeface(titleTypeface);
+
         collapsingToolbar.setExpandedTitleTextAppearance(R.style.ToolbarExpanded);
         collapsingToolbar.setExpandedTitleTypeface(titleTypeface);
-        collapsingToolbar.setExpandedTitleGravity(0x10);
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
 
@@ -119,6 +120,23 @@ public class ArticleListActivity extends AppCompatActivity implements
         super.onStop();
         unregisterReceiver(mRefreshingReceiver);
     }
+
+    /**
+     * Don't forget to call setResult(Activity.RESULT_OK) in the returning
+     * activity or else this method won't be called!
+     */
+    @Override
+    public void onActivityReenter(int resultCode, Intent data) {
+        super.onActivityReenter(resultCode, data);
+
+        // Postpone the shared element return transition.
+        //  postponeEnterTransition();
+
+        // TODO: Call the "scheduleStartPostponedTransition()" method
+        // above when you know for certain that the shared element is
+        // ready for the transition to begin.
+    }
+
 
     private boolean mIsRefreshing = false;
 
@@ -178,17 +196,23 @@ public class ArticleListActivity extends AppCompatActivity implements
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//                        Bundle bundle = ActivityOptions.makeSceneTransitionAnimation()
-//                                .toBundle();
-//                        startActivity(new Intent(Intent.ACTION_VIEW,
-//                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))),
-//                                bundle);
-//                    } else { // Don't need bundle if we can't do the transition
+                    // Launch ArticleDetailActivity using shared element transition if > v21
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+
+                        View sharedElement = findViewById(R.id.photoView);
+                        // ActivityOptionsCompat transition = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                        //     ArticleListActivity.this, sharedElement, getString(R.string.transition_photo));
+                        // Bundle bundle = transition.toBundle();
+
                         startActivity(new Intent(Intent.ACTION_VIEW,
                                 ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
-//                    }
+                        //        ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))),
+                        //        bundle);
 
+                    } else { // Don't need bundle if we can't do the transition
+                        startActivity(new Intent(Intent.ACTION_VIEW,
+                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+                    }
                 }
             });
             return vh;

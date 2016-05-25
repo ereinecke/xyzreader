@@ -15,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.WindowInsets;
 
 import com.ereinecke.xyzreader.R;
@@ -23,6 +24,8 @@ import com.ereinecke.xyzreader.data.ItemsContract;
 
 /**
  * An activity representing a single Article detail screen, letting you swipe between articles.
+ * Major contribution to transition animation from
+ * http://www.androiddesignpatterns.com/2015/03/activity-postponed-shared-element-transitions-part3b.html#footnote3
  */
 
 public class ArticleDetailActivity extends AppCompatActivity
@@ -44,6 +47,9 @@ public class ArticleDetailActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            postponeEnterTransition();
+            // get sharedElement
+
             getWindow().getDecorView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
                             View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
@@ -103,6 +109,15 @@ public class ArticleDetailActivity extends AppCompatActivity
             });
         }
 
+        /* Entry transition we'll start with moving article in from below */
+        /* Same behavior here or in fragment: pops right in on entrance, waits then disappears on exit
+        Slide slide = new Slide(Gravity.BOTTOM);
+        slide.addTarget(R.id.article);
+        // slide.setInterpolator(AnimationUtils.loadInterpolator(this,
+        //         android.R.interpolator.linear_out_slow_in));
+        slide.setDuration(3000);
+        getWindow().setEnterTransition(slide); */
+
         if (savedInstanceState == null) {
             if (getIntent() != null && getIntent().getData() != null) {
                 mStartId = ItemsContract.Items.getItemId(getIntent().getData());
@@ -110,6 +125,13 @@ public class ArticleDetailActivity extends AppCompatActivity
             }
         }
     }
+
+    @Override
+    protected void onStop() {
+        supportFinishAfterTransition();
+        super.onStop();
+    }
+
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
@@ -135,6 +157,18 @@ public class ArticleDetailActivity extends AppCompatActivity
             }
             mStartId = 0;
         }
+    }
+
+    public void scheduleStartPostponedTransition(final View sharedElement) {
+        sharedElement.getViewTreeObserver().addOnPreDrawListener(
+                new ViewTreeObserver.OnPreDrawListener() {
+                    @Override
+                    public boolean onPreDraw() {
+                        sharedElement.getViewTreeObserver().removeOnPreDrawListener(this);
+                        startPostponedEnterTransition();
+                        return true;
+                    }
+                });
     }
 
     @Override

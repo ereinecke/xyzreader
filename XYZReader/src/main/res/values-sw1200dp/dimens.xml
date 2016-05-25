@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- detail -->
+    <dimen name="detail_title_text_size">120sp</dimen>
+    <dimen name="detail_body_text_size">30sp</dimen>
+
+    <dimen name="toolbar_expanded_text_size">60dp</dimen>
+    <dimen name="toolbar_collapsed_text_size">24dp</dimen>
+
+</resources>
