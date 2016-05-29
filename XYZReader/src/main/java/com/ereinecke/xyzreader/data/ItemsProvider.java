@@ -73,7 +73,7 @@ public class ItemsProvider extends ContentProvider {
 		final int match = sUriMatcher.match(uri);
 		switch (match) {
 			case ITEMS: {
-				final long _id = db.insertOrThrow(Tables.ITEMS, null, values);
+				final int _id = (int) db.insertOrThrow(Tables.ITEMS, null, values);
                 getContext().getContentResolver().notifyChange(uri, null);
 				return ItemsContract.Items.buildItemUri(_id);
 			}

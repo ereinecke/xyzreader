@@ -2,6 +2,7 @@ package com.ereinecke.xyzreader.ui;
 
 import android.annotation.TargetApi;
 import android.app.LoaderManager;
+import android.app.SharedElementCallback;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,7 +12,11 @@ import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -23,12 +28,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
 import com.ereinecke.xyzreader.R;
 import com.ereinecke.xyzreader.data.ArticleLoader;
 import com.ereinecke.xyzreader.data.ItemsContract;
 import com.ereinecke.xyzreader.data.UpdaterService;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An activity representing a list of Articles. This activity has different presentations for
@@ -44,17 +54,66 @@ public class ArticleListActivity extends AppCompatActivity implements
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
     private final static String LOG_TAG = ArticleListActivity.class.getSimpleName();
+    static final String EXTRA_STARTING_ITEM_POSITION = "extra_starting_item_position";
+    static final String EXTRA_CURRENT_ITEM_POSITION = "extra_current_item_position";
+    // This would break if json contained more than 17 items.  The dummy data we're using has 17.
+    private Map<Integer, String> map = new HashMap<>(17);
+    private Bundle mTmpReenterState;
+    // private long mItemPosition;
+    private boolean mIsDetailActivityStarted;
+
+    // The SharedElementCallback is required to ensure that the transition doesn't start
+    // until the called activity & fragment have been laid out.  This code is from
+    // https://github.com/alexjlockwood/activity-transitions
+    private final SharedElementCallback mCallback = new SharedElementCallback() {
+        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+        @Override
+        public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
+            if (mTmpReenterState != null) {
+                int startingPosition = mTmpReenterState.getInt(EXTRA_STARTING_ITEM_POSITION);
+                int currentPosition = mTmpReenterState.getInt(EXTRA_CURRENT_ITEM_POSITION);
+                if (startingPosition != currentPosition) {
+                    // If startingPosition != currentPosition the user must have swiped to a
+                    // different page in the DetailsActivity. We must update the shared element
+                    // so that the correct one falls into place.
+                    String newTransitionName = map.get(currentPosition);
+                    View newSharedElement = mRecyclerView.findViewWithTag(newTransitionName);
+                    if (newSharedElement != null) {
+                        names.clear();
+                        names.add(newTransitionName);
+                        sharedElements.clear();
+                        sharedElements.put(newTransitionName, newSharedElement);
+                    }
+                }
+
+                mTmpReenterState = null;
+            } else {
+                // If mTmpReenterState is null, then the activity is exiting.
+                View navigationBar = findViewById(android.R.id.navigationBarBackground);
+                View statusBar = findViewById(android.R.id.statusBarBackground);
+                if (navigationBar != null) {
+                    names.add(navigationBar.getTransitionName());
+                    sharedElements.put(navigationBar.getTransitionName(), navigationBar);
+                }
+                if (statusBar != null) {
+                    names.add(statusBar.getTransitionName());
+                    sharedElements.put(statusBar.getTransitionName(), statusBar);
+                }
+            }
+        }
+    };
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_article_list);
+        setExitSharedElementCallback(mCallback);
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
 
-        // Should I be using this  ??
+        // This might be useful for a transition, not using at this point
         final View toolbarContainerView = findViewById(R.id.toolbar_container);
 
         // Use custom typeface for title
@@ -79,7 +138,30 @@ public class ArticleListActivity extends AppCompatActivity implements
         if (savedInstanceState == null) {
             refresh();
         }
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mIsDetailActivityStarted = false;
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable("layoutmanager", mRecyclerView.getLayoutManager().onSaveInstanceState());
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null && mRecyclerView != null && mRecyclerView.getLayoutManager() != null) {
+            Parcelable layoutmanager = savedInstanceState.getParcelable("layoutmanager");
+            mRecyclerView.getLayoutManager().onRestoreInstanceState(layoutmanager);
+            if (findViewById(R.id.toolbar_container) != null) {
+                ((AppBarLayout) findViewById(R.id.toolbar_container)).setExpanded(false);
+            }
+        }
     }
 
     @Override
@@ -128,15 +210,31 @@ public class ArticleListActivity extends AppCompatActivity implements
     @Override
     public void onActivityReenter(int resultCode, Intent data) {
         super.onActivityReenter(resultCode, data);
+        mTmpReenterState = new Bundle(data.getExtras());
 
-        // Postpone the shared element return transition.
-        //  postponeEnterTransition();
+        int startingPosition = mTmpReenterState.getInt(EXTRA_CURRENT_ITEM_POSITION);
+        int currentPosition =  mTmpReenterState.getInt(EXTRA_STARTING_ITEM_POSITION);
+        if (startingPosition != currentPosition) {
+            mRecyclerView.scrollToPosition(currentPosition);
+        }
 
-        // TODO: Call the "scheduleStartPostponedTransition()" method
-        // above when you know for certain that the shared element is
-        // ready for the transition to begin.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // Postpone the shared element enter transition to ensure that the shared element has
+            // been laid out
+            postponeEnterTransition();
+
+            mRecyclerView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    mRecyclerView.getViewTreeObserver().removeOnPreDrawListener(this);
+                    // TODO: figure out why it is necessary to request layout here in order to get a smooth transition.
+                    mRecyclerView.requestLayout();
+                    startPostponedEnterTransition();
+                    return true;
+                }
+            });
+        }
     }
-
 
     private boolean mIsRefreshing = false;
 
@@ -178,6 +276,7 @@ public class ArticleListActivity extends AppCompatActivity implements
 
     private class Adapter extends RecyclerView.Adapter<ViewHolder> {
         private final Cursor mCursor;
+        private int mItemPosition;
 
         public Adapter(Cursor cursor) {
             mCursor = cursor;
@@ -198,20 +297,27 @@ public class ArticleListActivity extends AppCompatActivity implements
                 public void onClick(View view) {
                     // Launch ArticleDetailActivity using shared element transition if > v21
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        View sharedElement = view.findViewById(R.id.photoView);
+                        long itemId = getItemId(vh.getAdapterPosition());
+                        Log.d(LOG_TAG, "In onCreateViewHolder, itemId: " + itemId);
 
-                        View sharedElement = findViewById(R.id.photoView);
-                        // ActivityOptionsCompat transition = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                        //     ArticleListActivity.this, sharedElement, getString(R.string.transition_photo));
-                        // Bundle bundle = transition.toBundle();
+                        Intent intent = new Intent(Intent.ACTION_VIEW,
+                                ItemsContract.Items.buildItemUri(itemId));
+                        intent.putExtra(EXTRA_STARTING_ITEM_POSITION, mItemPosition);
 
-                        startActivity(new Intent(Intent.ACTION_VIEW,
-                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
-                        //        ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))),
-                        //        bundle);
+                        String transitionName = sharedElement.getTransitionName();
+                        assert transitionName != null;
+                        if (!mIsDetailActivityStarted) {
+                            mIsDetailActivityStarted = true;
+                            ActivityCompat.startActivity(ArticleListActivity.this, intent,
+                                    ActivityOptionsCompat.makeSceneTransitionAnimation(
+                                    ArticleListActivity.this, sharedElement, transitionName)
+                                    .toBundle());
 
+                        }
                     } else { // Don't need bundle if we can't do the transition
                         startActivity(new Intent(Intent.ACTION_VIEW,
-                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+                                ItemsContract.Items.buildItemUri(vh.getAdapterPosition())));
                     }
                 }
             });
@@ -220,9 +326,11 @@ public class ArticleListActivity extends AppCompatActivity implements
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
+            mItemPosition = position;
             mCursor.moveToPosition(position);
             holder.titleView.setText(mCursor.getString(ArticleLoader.Query.TITLE));
             holder.subtitleView.setText(
+                    // TODO: this should use a resource string with placeholders to allow localization
                     DateUtils.getRelativeTimeSpanString(
                             mCursor.getLong(ArticleLoader.Query.PUBLISHED_DATE),
                             System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,

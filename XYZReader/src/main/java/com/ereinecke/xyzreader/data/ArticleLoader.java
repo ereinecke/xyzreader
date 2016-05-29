@@ -13,7 +13,7 @@ public class ArticleLoader extends CursorLoader {
     }
 
     public static ArticleLoader newInstanceForItemId(Context context, long itemId) {
-        return new ArticleLoader(context, ItemsContract.Items.buildItemUri(itemId));
+        return new ArticleLoader(context, ItemsContract.Items.buildItemUri((int) itemId));
     }
 
     private ArticleLoader(Context context, Uri uri) {

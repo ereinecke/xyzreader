@@ -11,6 +11,7 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ShareCompat;
 import android.support.v7.graphics.Palette;
 import android.text.Html;
@@ -20,6 +21,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -29,14 +31,15 @@ import com.ereinecke.xyzreader.R;
 import com.ereinecke.xyzreader.data.ArticleLoader;
 
 /**
- * A fragment representing a single Article detail screen. This fragment is
+ * A fragment representing a single Article detail screen. This fragment will
  * either contained in a {@link ArticleListActivity} in two-pane mode (on
- * tablets) or a {@link ArticleDetailActivity} on handsets.
+ * tablets) or a {@link ArticleDetailActivity} on handsets. (two-pane mode not implemented yet)
  */
 public class ArticleDetailFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor> {
     private static final String LOG_TAG = ArticleDetailFragment.class.getSimpleName();
-
+    private static final String ARG_ITEM_POSITION = "arg_item_position";
+    private static final String ARG_STARTING_ITEM_POSITION = "arg_starting_item_position";
     private static final String ARG_ITEM_ID = "item_id";
     private static final float PARALLAX_FACTOR = 1.25f;
 
@@ -55,8 +58,10 @@ public class ArticleDetailFragment extends Fragment implements
     private boolean mIsCard = false;
     private int mStatusBarFullOpacityBottom;
 
-    private View sharedElement;
-
+    private long mStartingPosition;
+    private long mItemPosition;
+    private boolean mIsTransitioning;
+    private long mBackgroundImageFadeMillis;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -65,9 +70,10 @@ public class ArticleDetailFragment extends Fragment implements
     public ArticleDetailFragment() {
     }
 
-    public static ArticleDetailFragment newInstance(long itemId) {
+    public static ArticleDetailFragment newInstance(long itemId, long startingPosition) {
         Bundle arguments = new Bundle();
         arguments.putLong(ARG_ITEM_ID, itemId);
+        arguments.putLong(ARG_STARTING_ITEM_POSITION, startingPosition);
         ArticleDetailFragment fragment = new ArticleDetailFragment();
         fragment.setArguments(arguments);
         return fragment;
@@ -77,6 +83,12 @@ public class ArticleDetailFragment extends Fragment implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mStartingPosition = getArguments().getLong(ARG_STARTING_ITEM_POSITION);
+        mItemPosition = getArguments().getLong(ARG_ITEM_POSITION);
+        mIsTransitioning = savedInstanceState == null && mStartingPosition == mItemPosition;
+        mBackgroundImageFadeMillis = getResources().getInteger(
+                R.integer.fragment_details_background_image_fade_millis);
+
         if (getArguments().containsKey(ARG_ITEM_ID)) {
             mItemId = getArguments().getLong(ARG_ITEM_ID);
         }
@@ -84,15 +96,6 @@ public class ArticleDetailFragment extends Fragment implements
         mIsCard = getResources().getBoolean(R.bool.detail_is_card);
         mStatusBarFullOpacityBottom = getResources().getDimensionPixelSize(
                 R.dimen.detail_card_top_margin);
-
-        /* Entry transition we'll start with moving article in from below
-        Slide slide = new Slide(Gravity.BOTTOM);
-        slide.addTarget(R.id.article_body);
-        slide.setInterpolator(AnimationUtils.loadInterpolator(getActivity(),
-                android.R.interpolator.linear_out_slow_in));
-        slide.setDuration(3000);
-        getActivity().getWindow().setEnterTransition(slide); */
-
 
         setHasOptionsMenu(true);
     }
@@ -137,11 +140,13 @@ public class ArticleDetailFragment extends Fragment implements
             }
         });
 
-        mPhotoView = (ImageView) mRootView.findViewById(R.id.photoView);
+        mPhotoView = (ImageView) mRootView.findViewById(R.id.photo_header);
+        Log.d(LOG_TAG, "photoView: " + mPhotoView.toString());
         mPhotoContainerView = mRootView.findViewById(R.id.photo_container);
 
         mStatusBarColorDrawable = new ColorDrawable(0);
 
+        /* FAB listener */
         mRootView.findViewById(R.id.share_fab).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -152,17 +157,22 @@ public class ArticleDetailFragment extends Fragment implements
             }
         });
 
-        // Let calling activity know it can start the transition calculations
-//        while (container.isLaidOut()) {
-//            View sharedElement = View.findViewById(R.id.photo_header);
-//            getActivityCast().scheduleStartPostponedTransition(sharedElement);
-//        }
-
         bindViews();
         updateStatusBar();
         return mRootView;
     }
 
+    private void scheduleStartPostponedTransition(final View sharedElement) {
+        sharedElement.getViewTreeObserver().addOnPreDrawListener(
+                new ViewTreeObserver.OnPreDrawListener() {
+                    @Override
+                    public boolean onPreDraw() {
+                        sharedElement.getViewTreeObserver().removeOnPreDrawListener(this);
+                        getActivity().startPostponedEnterTransition();
+                        return true;
+                    }
+                });
+    }
 
     private void updateStatusBar() {
         int color = 0;
@@ -268,6 +278,10 @@ public class ArticleDetailFragment extends Fragment implements
             mCursor = null;
         }
 
+        // Let calling activity know we're ready for fransition
+        View sharedElement = mRootView.findViewById(R.id.photo_header);
+        scheduleStartPostponedTransition(sharedElement);
+
         bindViews();
     }
 
@@ -277,9 +291,9 @@ public class ArticleDetailFragment extends Fragment implements
         bindViews();
     }
 
-    public int getUpButtonFloor() {
+    public long getUpButtonFloor() {
         if (mPhotoContainerView == null || mPhotoView.getHeight() == 0) {
-            return Integer.MAX_VALUE;
+            return Long.MAX_VALUE;
         }
 
         // account for parallax
@@ -287,4 +301,13 @@ public class ArticleDetailFragment extends Fragment implements
                 ? (int) mPhotoContainerView.getTranslationY() + mPhotoView.getHeight() - mScrollY
                 : mPhotoView.getHeight() - mScrollY;
     }
+
+    /**
+     * Returns the shared element that should be transitioned back to the previous Activity,
+     * or null if the view is not visible on the screen.
+     */
+    @Nullable
+    ImageView getHeaderImage() {
+        return mPhotoView;
+   }
 }

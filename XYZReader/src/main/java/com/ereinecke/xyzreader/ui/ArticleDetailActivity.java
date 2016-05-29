@@ -1,9 +1,12 @@
 package com.ereinecke.xyzreader.ui;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.LoaderManager;
+import android.app.SharedElementCallback;
+import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.drawable.ColorDrawable;
@@ -12,15 +15,23 @@ import android.os.Bundle;
 import android.support.v13.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.WindowInsets;
+import android.widget.ImageView;
 
 import com.ereinecke.xyzreader.R;
 import com.ereinecke.xyzreader.data.ArticleLoader;
 import com.ereinecke.xyzreader.data.ItemsContract;
+
+import java.util.List;
+import java.util.Map;
+
+import static com.ereinecke.xyzreader.ui.ArticleListActivity.EXTRA_CURRENT_ITEM_POSITION;
+import static com.ereinecke.xyzreader.ui.ArticleListActivity.EXTRA_STARTING_ITEM_POSITION;
+
 
 /**
  * An activity representing a single Article detail screen, letting you swipe between articles.
@@ -31,11 +42,15 @@ import com.ereinecke.xyzreader.data.ItemsContract;
 public class ArticleDetailActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final String STATE_CURRENT_PAGE_POSITION = "state_current_page_position";
+    private static final String LOG_TAG = ArticleDetailActivity.class.getSimpleName();
+    private static boolean DEBUG = true;
+
     private Cursor mCursor;
     private long mStartId;
 
     private long mSelectedItemId;
-    private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
+    private long mSelectedItemUpButtonFloor = Long.MAX_VALUE;
     private int mTopInset;
 
     private ViewPager mPager;
@@ -43,18 +58,33 @@ public class ArticleDetailActivity extends AppCompatActivity
     private View mUpButtonContainer;
     private View mUpButton;
 
+    private ArticleDetailFragment mCurrentDetailFragment;
+    private int mCurrentPosition;
+    private int mStartingPosition;
+    private boolean mIsReturning;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_article_detail);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             postponeEnterTransition();
-            // get sharedElement
+            setEnterSharedElementCallback(mCallback);
 
             getWindow().getDecorView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
                             View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         }
-        setContentView(R.layout.activity_article_detail);
+
+        mStartingPosition = getIntent().getIntExtra(EXTRA_STARTING_ITEM_POSITION, 0);
+        Log.d(LOG_TAG, "mStartingPosition from intent: " + mStartingPosition);
+
+        if (savedInstanceState == null) {
+            mCurrentPosition = mStartingPosition;
+        } else {
+            mCurrentPosition = savedInstanceState.getInt(STATE_CURRENT_PAGE_POSITION);
+        }
 
         getLoaderManager().initLoader(0, null, this);
 
@@ -109,15 +139,6 @@ public class ArticleDetailActivity extends AppCompatActivity
             });
         }
 
-        /* Entry transition we'll start with moving article in from below */
-        /* Same behavior here or in fragment: pops right in on entrance, waits then disappears on exit
-        Slide slide = new Slide(Gravity.BOTTOM);
-        slide.addTarget(R.id.article);
-        // slide.setInterpolator(AnimationUtils.loadInterpolator(this,
-        //         android.R.interpolator.linear_out_slow_in));
-        slide.setDuration(3000);
-        getWindow().setEnterTransition(slide); */
-
         if (savedInstanceState == null) {
             if (getIntent() != null && getIntent().getData() != null) {
                 mStartId = ItemsContract.Items.getItemId(getIntent().getData());
@@ -126,13 +147,43 @@ public class ArticleDetailActivity extends AppCompatActivity
         }
     }
 
+    /* SharedElementCallback from https://github.com/alexjlockwood/activity-transitions */
+    private final SharedElementCallback mCallback = new SharedElementCallback() {
+        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+        @Override
+        public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
+            if (mIsReturning) {
+                ImageView sharedElement = mCurrentDetailFragment.getHeaderImage();
+                if (sharedElement == null) {
+                    // If shared element is null, then it has been scrolled off screen and
+                    // no longer visible. In this case we cancel the shared element transition by
+                    // removing the shared element from the shared elements map.
+                    names.clear();
+                    sharedElements.clear();
+                } else if (mStartingPosition != mCurrentPosition) {
+                    // If the user has swiped to a different ViewPager page, then we need to
+                    // remove the old shared element and replace it with the new shared element
+                    // that should be transitioned instead.
+                    names.clear();
+                    names.add(sharedElement.getTransitionName());
+                    sharedElements.clear();
+                    sharedElements.put(sharedElement.getTransitionName(), sharedElement);
+                }
+            }
+        }
+    };
+
     @Override
     protected void onStop() {
         supportFinishAfterTransition();
         super.onStop();
     }
 
-
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_CURRENT_PAGE_POSITION, mCurrentPosition);
+    }
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         return ArticleLoader.newAllArticlesInstance(this);
@@ -159,16 +210,14 @@ public class ArticleDetailActivity extends AppCompatActivity
         }
     }
 
-    public void scheduleStartPostponedTransition(final View sharedElement) {
-        sharedElement.getViewTreeObserver().addOnPreDrawListener(
-                new ViewTreeObserver.OnPreDrawListener() {
-                    @Override
-                    public boolean onPreDraw() {
-                        sharedElement.getViewTreeObserver().removeOnPreDrawListener(this);
-                        startPostponedEnterTransition();
-                        return true;
-                    }
-                });
+    @Override
+    public void finishAfterTransition() {
+        mIsReturning = true;
+        Intent data = new Intent();
+        data.putExtra(EXTRA_STARTING_ITEM_POSITION, mStartingPosition);
+        data.putExtra(EXTRA_CURRENT_ITEM_POSITION, mCurrentPosition);
+        setResult(RESULT_OK, data);
+        super.finishAfterTransition();
     }
 
     @Override
@@ -185,7 +234,7 @@ public class ArticleDetailActivity extends AppCompatActivity
     }
 
     private void updateUpButtonPosition() {
-        int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
+        long upButtonNormalBottom = (long) mTopInset + mUpButton.getHeight();
         mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
     }
 
@@ -207,7 +256,8 @@ public class ArticleDetailActivity extends AppCompatActivity
         @Override
         public Fragment getItem(int position) {
             mCursor.moveToPosition(position);
-            return ArticleDetailFragment.newInstance(mCursor.getLong(ArticleLoader.Query._ID));
+            return ArticleDetailFragment.newInstance(mCursor.getLong(ArticleLoader.Query._ID),
+                    mStartingPosition);
         }
 
         @Override
