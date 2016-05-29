@@ -18,29 +18,16 @@
 <resources>
 
     <style name="Theme.Bacon" parent="@style/Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your them here. -->
+        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/theme_primary</item>
         <item name="colorPrimaryDark">@color/theme_primary_dark</item>
         <item name="colorAccent">@color/theme_accent</item>
         <item name="android:colorBackground">@color/theme_background</item>
         <item name="windowActionBar">false</item>
-        <!--
+
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowActivityTransitions">true</item>
-        -->
     </style>
-
-    <!--
-    <style name="Theme.Bacon.ArticleListActivity" parent="@style/Theme.Bacon">
-
-        <item name="android:windowExitTransition">@android:transition/explode</item>
-        <item name="android:windowSharedElementExitTransition">@transition/transition_photo</item>
-    </style>
-
-    <style name="Theme.Bacon.ArticleDetailActivity" parent="@style/Theme.Bacon">
-        <item name="android:windowSharedElementEnterTransition">@transition/transition_photo</item>
-    </style>
-    -->
 
     <style name="ToolbarExpanded" parent="@android:style/TextAppearance">
         <item name="android:textSize">@dimen/toolbar_expanded_text_size</item>

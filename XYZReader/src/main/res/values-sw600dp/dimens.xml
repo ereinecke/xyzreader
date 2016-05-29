@@ -6,6 +6,9 @@
     <dimen name="toolbar_expanded_text_size">40dp</dimen>
     <dimen name="toolbar_collapsed_text_size">24dp</dimen>
 
+    <dimen name="app_bar_height">240dp</dimen>
+    <dimen name="article_list_padding_top">120dp</dimen>
+
     <item name="detail_body_line_spacing_multiplier" format="float" type="fraction">1.3</item>
     <dimen name="fab_margin">24dp</dimen>
 </resources>

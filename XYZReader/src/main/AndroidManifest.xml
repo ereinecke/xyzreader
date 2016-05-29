@@ -1,7 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.ereinecke.xyzreader"
-    android:versionCode="1"
-    android:versionName="1.0">
+    package="com.ereinecke.xyzreader">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -19,9 +17,8 @@
         <activity
             android:name=".ui.ArticleListActivity"
             android:label="@string/app_name">
-            <!--
             android:theme="@style/Theme.Bacon.ArticleListActivity">
-            -->
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -31,9 +28,8 @@
         <activity
             android:name=".ui.ArticleDetailActivity"
             android:parentActivityName=".ui.ArticleListActivity" >
-            <!--
             android:theme="@style/Theme.Bacon.ArticleDetailActivity" >
-            -->
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

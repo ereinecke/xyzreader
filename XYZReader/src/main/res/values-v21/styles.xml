@@ -17,18 +17,33 @@
 
 <resources>
 
-    <style name="Theme.Bacon.Detail">
+    <style name="Theme.Bacon.Detail" parent="@style/Theme.AppCompat.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="Theme.Bacon" parent="@style/Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your them here. -->
+        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/theme_primary</item>
         <item name="colorPrimaryDark">@color/theme_primary_dark</item>
         <item name="colorAccent">@color/theme_accent</item>
         <item name="android:colorBackground">@color/theme_background</item>
         <item name="windowActionBar">false</item>
+
         <item name="android:windowContentTransitions">true</item>
+        <item name="android:windowActivityTransitions">true</item>
+
+        <item name="android:windowAllowEnterTransitionOverlap">true</item>
+        <item name="android:windowAllowReturnTransitionOverlap">true</item>
     </style>
+
+    <style name="Theme.Bacon.ArticleListActivity" parent="@style/Theme.Bacon">
+        <item name="android:windowSharedElementExitTransition">@transition/transition_photo</item>
+        <item name="android:windowSharedElementReenterTransition">@transition/transition_photo</item>
+    </style>
+
+    <style name="Theme.Bacon.ArticleDetailActivity" parent="@style/Theme.Bacon">
+        <item name="android:windowSharedElementEnterTransition">@transition/transition_photo</item>
+    </style>
+
 
 </resources>

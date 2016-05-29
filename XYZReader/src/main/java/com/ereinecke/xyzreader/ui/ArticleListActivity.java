@@ -1,5 +1,6 @@
 package com.ereinecke.xyzreader.ui;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.LoaderManager;
 import android.app.SharedElementCallback;
@@ -50,17 +51,55 @@ import java.util.Map;
 public class ArticleListActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor> {
 
-    private Toolbar mToolbar;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
     private final static String LOG_TAG = ArticleListActivity.class.getSimpleName();
+    private final static boolean DEBUG = true;
     static final String EXTRA_STARTING_ITEM_POSITION = "extra_starting_item_position";
     static final String EXTRA_CURRENT_ITEM_POSITION = "extra_current_item_position";
     // This would break if json contained more than 17 items.  The dummy data we're using has 17.
     private Map<Integer, String> map = new HashMap<>(17);
     private Bundle mTmpReenterState;
-    // private long mItemPosition;
     private boolean mIsDetailActivityStarted;
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_article_list);
+        setExitSharedElementCallback(mCallback);
+
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
+
+        // This might be useful for a transition, not using at this point
+        final View toolbarContainerView = findViewById(R.id.toolbar_container);
+
+        // Use custom typeface for title
+        // Was not able to get this to work with a vector drawable, setting logo instead of title
+        Typeface titleTypeface = Typeface.createFromAsset(getAssets(), "fonts/TitanOne-Regular.ttf");
+
+        CollapsingToolbarLayout collapsingToolbar =
+                (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
+        assert collapsingToolbar != null;
+        collapsingToolbar.setTitle(getString(R.string.app_name));
+
+        // Looks like you have to set typeface after appearance
+        collapsingToolbar.setCollapsedTitleTextAppearance(R.style.ToolbarCollapsed);
+        collapsingToolbar.setCollapsedTitleTypeface(titleTypeface);
+
+        collapsingToolbar.setExpandedTitleTextAppearance(R.style.ToolbarExpanded);
+        collapsingToolbar.setExpandedTitleTypeface(titleTypeface);
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        getLoaderManager().initLoader(0, null, this);
+
+        if (savedInstanceState == null) {
+            refresh();
+        }
+    }
 
     // The SharedElementCallback is required to ensure that the transition doesn't start
     // until the called activity & fragment have been laid out.  This code is from
@@ -102,43 +141,6 @@ public class ArticleListActivity extends AppCompatActivity implements
             }
         }
     };
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_article_list);
-        setExitSharedElementCallback(mCallback);
-
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(mToolbar);
-
-        // This might be useful for a transition, not using at this point
-        final View toolbarContainerView = findViewById(R.id.toolbar_container);
-
-        // Use custom typeface for title
-        Typeface titleTypeface = Typeface.createFromAsset(getAssets(), "fonts/TitanOne-Regular.ttf");
-
-        CollapsingToolbarLayout collapsingToolbar =
-                (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
-        collapsingToolbar.setTitle(getString(R.string.app_name));
-
-        // Looks like you have to set typeface after appearance
-        collapsingToolbar.setCollapsedTitleTextAppearance(R.style.ToolbarCollapsed);
-        collapsingToolbar.setCollapsedTitleTypeface(titleTypeface);
-
-        collapsingToolbar.setExpandedTitleTextAppearance(R.style.ToolbarExpanded);
-        collapsingToolbar.setExpandedTitleTypeface(titleTypeface);
-
-        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
-
-        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        getLoaderManager().initLoader(0, null, this);
-
-        if (savedInstanceState == null) {
-            refresh();
-        }
-    }
 
     @Override
     protected void onResume() {
@@ -324,6 +326,7 @@ public class ArticleListActivity extends AppCompatActivity implements
             return vh;
         }
 
+        @SuppressLint("RecyclerView")
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
             mItemPosition = position;
@@ -337,8 +340,10 @@ public class ArticleListActivity extends AppCompatActivity implements
                             DateUtils.FORMAT_ABBREV_ALL).toString()
                             + " by "
                             + mCursor.getString(ArticleLoader.Query.AUTHOR));
+            // Some of the thumbnails are blurry on a 10" tablet.  It would be good to decide
+            // whether to download thumb or full size photo based on image and screen size.
             holder.cardView.setImageUrl(
-                    mCursor.getString(ArticleLoader.Query.PHOTO_URL),
+                    mCursor.getString(ArticleLoader.Query.THUMB_URL),
                     ImageLoaderHelper.getInstance(ArticleListActivity.this).getImageLoader());
             holder.cardView.setAspectRatio(mCursor.getFloat(ArticleLoader.Query.ASPECT_RATIO));
         }

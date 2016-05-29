@@ -58,11 +58,6 @@ public class ArticleDetailFragment extends Fragment implements
     private boolean mIsCard = false;
     private int mStatusBarFullOpacityBottom;
 
-    private long mStartingPosition;
-    private long mItemPosition;
-    private boolean mIsTransitioning;
-    private long mBackgroundImageFadeMillis;
-
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -83,10 +78,10 @@ public class ArticleDetailFragment extends Fragment implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mStartingPosition = getArguments().getLong(ARG_STARTING_ITEM_POSITION);
-        mItemPosition = getArguments().getLong(ARG_ITEM_POSITION);
-        mIsTransitioning = savedInstanceState == null && mStartingPosition == mItemPosition;
-        mBackgroundImageFadeMillis = getResources().getInteger(
+        long mStartingPosition = getArguments().getLong(ARG_STARTING_ITEM_POSITION);
+        long mItemPosition = getArguments().getLong(ARG_ITEM_POSITION);
+        boolean mIsTransitioning = savedInstanceState == null && mStartingPosition == mItemPosition;
+        long mBackgroundImageFadeMillis = getResources().getInteger(
                 R.integer.fragment_details_background_image_fade_millis);
 
         if (getArguments().containsKey(ARG_ITEM_ID)) {
@@ -228,6 +223,8 @@ public class ArticleDetailFragment extends Fragment implements
                             + mCursor.getString(ArticleLoader.Query.AUTHOR)
                             + "</font>"));
             bodyView.setText(Html.fromHtml(mCursor.getString(ArticleLoader.Query.BODY)));
+            // TODO: Need to make sure image size is reduced.  Got a GPU error when image >
+            // TODO: 4096px in either dimension.
             ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
                     .get(mCursor.getString(ArticleLoader.Query.PHOTO_URL), new ImageLoader.ImageListener() {
                         @Override

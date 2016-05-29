@@ -78,7 +78,7 @@ public class ArticleDetailActivity extends AppCompatActivity
         }
 
         mStartingPosition = getIntent().getIntExtra(EXTRA_STARTING_ITEM_POSITION, 0);
-        Log.d(LOG_TAG, "mStartingPosition from intent: " + mStartingPosition);
+        if (DEBUG) Log.d(LOG_TAG, "mStartingPosition from intent: " + mStartingPosition);
 
         if (savedInstanceState == null) {
             mCurrentPosition = mStartingPosition;
@@ -246,9 +246,9 @@ public class ArticleDetailActivity extends AppCompatActivity
         @Override
         public void setPrimaryItem(ViewGroup container, int position, Object object) {
             super.setPrimaryItem(container, position, object);
-            ArticleDetailFragment fragment = (ArticleDetailFragment) object;
-            if (fragment != null) {
-                mSelectedItemUpButtonFloor = fragment.getUpButtonFloor();
+            mCurrentDetailFragment = (ArticleDetailFragment) object;
+            if (mCurrentDetailFragment != null) {
+                mSelectedItemUpButtonFloor = mCurrentDetailFragment.getUpButtonFloor();
                 updateUpButtonPosition();
             }
         }

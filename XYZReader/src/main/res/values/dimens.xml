@@ -12,9 +12,8 @@
     <dimen name="toolbar_expanded_text_size">40dp</dimen>
     <dimen name="toolbar_collapsed_text_size">24dp</dimen>
 
-    <dimen name="app_bar_height">240dp</dimen>
+    <dimen name="app_bar_height">180dp</dimen>
     <dimen name="article_list_padding_top">120dp</dimen>
-    <dimen name="logo_padding_top">80dp</dimen>
     <dimen name="text_margin">16dp</dimen>
     <dimen name="text_margin_for_fab">30dp</dimen>
     <dimen name="activity_horizontal_margin">16dp</dimen>
