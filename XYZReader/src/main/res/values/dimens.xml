@@ -8,9 +8,18 @@
     <dimen name="fab_elevation">6dp</dimen>
     <dimen name="fab_press_translation_z">6dp</dimen>
     <dimen name="fab_margin">24dp</dimen>
+    <dimen name="fab_margin_bottom">16dp</dimen>
 
     <dimen name="toolbar_expanded_text_size">40dp</dimen>
     <dimen name="toolbar_collapsed_text_size">24dp</dimen>
+
+    <dimen name="up_button_width">56dp</dimen>
+    <dimen name="recycler_view_padding_bottom">28dp</dimen>
+    <dimen name="toolbar_elevation">4dp</dimen>
+    <dimen name="detail_header_height">300dp</dimen>
+    <dimen name="list_article_margin">4dp</dimen>
+    <dimen name="article_text_padding">16dp</dimen>
+    <dimen name="card_elevation">2dp</dimen>
 
     <dimen name="app_bar_height">180dp</dimen>
     <dimen name="article_list_padding_top">120dp</dimen>

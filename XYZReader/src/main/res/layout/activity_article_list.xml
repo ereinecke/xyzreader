@@ -23,7 +23,7 @@
             android:paddingTop="@dimen/article_list_padding_top"
             android:paddingLeft="@dimen/list_side_margin"
             android:paddingRight="@dimen/list_side_margin"
-            android:paddingBottom="28dp" />
+            android:paddingBottom="@dimen/recycler_view_padding_bottom" />
     </android.support.v4.widget.SwipeRefreshLayout>
 
     <android.support.v4.widget.NestedScrollView
@@ -55,7 +55,7 @@
                 app:theme="@style/ThemeOverlay.AppCompat.Light"
                 android:layout_marginLeft="@dimen/list_toolbar_side_margin"
                 android:layout_marginRight="@dimen/list_toolbar_side_margin"
-                android:elevation="4dp"
+                android:elevation="@dimen/toolbar_elevation"
                 android:layout_gravity="top" />
 
         </android.support.design.widget.CollapsingToolbarLayout>

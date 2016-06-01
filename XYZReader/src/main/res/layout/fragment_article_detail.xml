@@ -32,7 +32,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="300dp"
+                    android:layout_height="@dimen/detail_header_height"
                     android:background="@drawable/photo_background_protection" />
 
             </FrameLayout>
@@ -44,8 +44,8 @@
                 android:layout_gravity="center_horizontal"
                 android:id="@+id/article"
                 android:maxWidth="@dimen/detail_card_max_width"
-                android:background="#fff"
-                android:elevation="2dp"
+                android:background="@android:color/white"
+                android:elevation="@dimen/card_elevation"
                 android:layout_marginTop="@dimen/detail_card_top_margin">
 
                 <LinearLayout
@@ -98,17 +98,17 @@
         </FrameLayout>
     </com.ereinecke.xyzreader.ui.ObservableScrollView>
 
-    <ImageButton android:id="@+id/share_fab"
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/share_fab"
         android:stateListAnimator="@anim/fab_state_list_anim"
         android:background="@drawable/add_fab_background"
         android:layout_gravity="bottom|end"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
         android:layout_marginRight="@dimen/fab_margin"
         android:layout_marginEnd="@dimen/fab_margin"
         android:layout_marginBottom="@dimen/fab_margin"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
         android:src="@drawable/ic_share"
-        android:elevation="@dimen/fab_elevation"
         android:contentDescription="@string/action_share" />
 
 </com.ereinecke.xyzreader.ui.DrawInsetsFrameLayout>
